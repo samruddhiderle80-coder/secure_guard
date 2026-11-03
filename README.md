@@ -89,3 +89,5 @@ This repository is pre-configured with [`vercel.json`](./vercel.json) and [`api/
 1. Import the repository at [vercel.com/new](https://vercel.com/new).
 2. Configure environment variables (`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NODE_ENV=production`).
 3. Deploy!
+
+# secure_guard
