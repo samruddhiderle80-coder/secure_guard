@@ -58,6 +58,31 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         }
       });
 
+      // 6. Fetch Privacy assessment from DB
+      const privacyRes = await dbPool.query(
+        `SELECT exposure_score as "exposureScore", exposure_level as "exposureLevel"
+         FROM public.privacy_assessments
+         WHERE user_id = $1::uuid
+         ORDER BY created_at DESC LIMIT 1;`,
+        [userId]
+      );
+
+      // 7. Fetch Incidents count
+      const incidentsRes = await dbPool.query(
+        `SELECT COUNT(*) as count FROM public.incidents WHERE user_id = $1::uuid;`,
+        [userId]
+      );
+
+      // 8. Fetch Recent Security Events from DB
+      const eventsRes = await dbPool.query(
+        `SELECT id, event_type as "eventType", metadata, created_at as "createdAt"
+         FROM public.security_events
+         WHERE user_id = $1::uuid
+         ORDER BY created_at DESC
+         LIMIT 5;`,
+        [userId]
+      );
+
       return reply.send({
         hasAssessment: !!latestAssessment,
         latestAssessment,
@@ -68,6 +93,9 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         phishingScore,
         completedTrainingCount,
         completedMfaChecksCount,
+        privacyExposure: privacyRes.rows[0] || null,
+        totalIncidents: parseInt(incidentsRes.rows[0]?.count || '0', 10),
+        recentEvents: eventsRes.rows,
       });
     } catch (err: any) {
       request.log.error(err, 'Dashboard fetch failed from DB.');

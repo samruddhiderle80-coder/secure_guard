@@ -12,7 +12,11 @@ import {
   Sparkles,
   Calendar,
   Layers,
-  ChevronRight
+  ChevronRight,
+  GraduationCap,
+  EyeOff,
+  Clock,
+  Activity
 } from 'lucide-react';
 import { fetchApi } from '../../lib/api';
 import { ScoreRing } from '../../components/common/ScoreRing';
@@ -49,6 +53,7 @@ export const UserDashboard: React.FC = () => {
     password: 0, mfa: 0, privacy: 0, phishing: 0, applications: 0, recovery: 0, awareness: 0
   };
   const openFindings = data?.openFindings || [];
+  const recentEvents = data?.recentEvents || [];
 
   return (
     <div className="space-y-8">
@@ -158,6 +163,69 @@ export const UserDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Secondary Safeguards Quick Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              to="/awareness/training"
+              className="p-4 bg-white rounded-2xl border border-slate-200 shadow-card hover:border-brand-300 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase">Training Modules</span>
+                <p className="text-base font-extrabold text-slate-900">
+                  {data.completedTrainingCount || 0} / 4 Completed
+                </p>
+              </div>
+              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                <GraduationCap size={20} />
+              </div>
+            </Link>
+
+            <Link
+              to="/tools/mfa-checklist"
+              className="p-4 bg-white rounded-2xl border border-slate-200 shadow-card hover:border-brand-300 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase">MFA Safeguards</span>
+                <p className="text-base font-extrabold text-slate-900">
+                  {data.completedMfaChecksCount || 0} Checks Active
+                </p>
+              </div>
+              <div className="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                <CheckSquare size={20} />
+              </div>
+            </Link>
+
+            <Link
+              to="/tools/privacy-check"
+              className="p-4 bg-white rounded-2xl border border-slate-200 shadow-card hover:border-brand-300 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase">Privacy Profile</span>
+                <p className="text-base font-extrabold text-slate-900">
+                  {data.privacyExposure?.exposureLevel || 'LOW'} Exposure
+                </p>
+              </div>
+              <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+                <EyeOff size={20} />
+              </div>
+            </Link>
+
+            <Link
+              to="/incidents"
+              className="p-4 bg-white rounded-2xl border border-slate-200 shadow-card hover:border-brand-300 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase">Incident Tickets</span>
+                <p className="text-base font-extrabold text-slate-900">
+                  {data.totalIncidents || 0} Reported
+                </p>
+              </div>
+              <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                <AlertTriangle size={20} />
+              </div>
+            </Link>
+          </div>
+
           {/* Central Score Analysis & Category Breakdown Section */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left: Score Gauge & Explanation */}
@@ -174,10 +242,10 @@ export const UserDashboard: React.FC = () => {
                 </p>
                 <p>
                   {score >= 80
-                    ? 'Your assessment indicates strong security practices across most key categories, with routine maintenance recommended.'
+                    ? 'Your assessment indicates strong security practices across key domains, with routine maintenance and credential hygiene recommended.'
                     : score >= 60
-                    ? 'Your assessment indicates several good security practices, with additional improvements recommended in privacy and phishing awareness.'
-                    : 'Your security posture faces heightened vulnerability due to missing multi-factor authentication or weak password habits.'}
+                    ? 'Your assessment indicates moderate security hygiene, with priority improvements recommended in multi-factor authentication and phishing defenses.'
+                    : 'Your security posture faces critical vulnerabilities due to missing multi-factor authentication or weak password habits.'}
                 </p>
               </div>
             </div>
@@ -274,6 +342,65 @@ export const UserDashboard: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Recent Security Activity & Audit Events Section */}
+          {recentEvents.length > 0 && (
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-card space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Activity size={18} className="text-brand-600" /> Recent Security Activity & Audit Feed
+                </h2>
+                <span className="text-xs text-slate-400 font-mono">Live PostgreSQL Event Stream</span>
+              </div>
+
+              <div className="space-y-3">
+                {recentEvents.map((evt: any, idx: number) => {
+                  let eventLabel = evt.eventType;
+                  let eventColor = 'bg-slate-100 text-slate-700';
+
+                  if (evt.eventType === 'ASSESSMENT_COMPLETED') {
+                    eventLabel = 'Assessment Evaluated & Persisted';
+                    eventColor = 'bg-brand-50 text-brand-700 border border-brand-200';
+                  } else if (evt.eventType === 'PHISHING_LAB_COMPLETED' || evt.eventType === 'PHISHING_ATTEMPT') {
+                    eventLabel = 'Phishing Simulator Exercise Completed';
+                    eventColor = 'bg-sky-50 text-sky-700 border border-sky-200';
+                  } else if (evt.eventType === 'TRAINING_MODULE_COMPLETED') {
+                    eventLabel = 'Security Training Module Finished';
+                    eventColor = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+                  } else if (evt.eventType === 'MFA_CHECKLIST_VERIFIED') {
+                    eventLabel = 'MFA Platform Checkpoints Verified';
+                    eventColor = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                  } else if (evt.eventType === 'INCIDENT_REPORTED') {
+                    eventLabel = 'Security Incident Ticket Logged';
+                    eventColor = 'bg-rose-50 text-rose-700 border border-rose-200';
+                  } else if (evt.eventType === 'AUTH_LOGIN') {
+                    eventLabel = 'User Session Authenticated';
+                    eventColor = 'bg-slate-100 text-slate-700';
+                  }
+
+                  const dateStr = evt.createdAt ? new Date(evt.createdAt).toLocaleString() : 'Recent';
+
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase ${eventColor}`}>
+                          {evt.eventType.replace('_', ' ')}
+                        </span>
+                        <span className="font-bold text-slate-800">{eventLabel}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+                        <Clock size={13} />
+                        <span>{dateStr}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Quick Launchers */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
