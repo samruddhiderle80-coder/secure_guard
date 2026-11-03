@@ -1,0 +1,7 @@
+.git
+node_modules
+*.log
+.env.local
+supabase/seed.sql
+backend/src/tests
+
